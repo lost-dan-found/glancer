@@ -144,6 +144,7 @@ class DashboardApp(App):
     def update_quote(self):
         self.quote.update("There comes a day in every man's life that he can no longer write another line of SAAS code. -Dan")
         self.quote.border_title = update_greeting(self.timezone)
+        self.quote.border_subtitle = "Glancer - v1.0"
 
 
     async def action_open_location_prompt(self) -> None:
