@@ -1,20 +1,13 @@
+from util import get_timezone, get_weather_details, get_location_details
+
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from textual.app import App, ComposeResult
-from textual.widgets import Digits, Static, Header, Footer
+from textual.widgets import Digits, Static
 from textual.containers import Horizontal, Vertical
-import requests
-import openmeteo_requests
-import pandas as pd
-import requests_cache
-from retry_requests import retry
 
-LAT = 42.36     # Boston latitude
-LON = -71.06    # Boston longitude
-
-# Timezone for clock
-TIMEZONE = "America/New_York"
-
+DEFAULT_TIMEZONE = "America/New_York"
+LOCATION = "Paris"
 
 class DashboardApp(App):
     CSS = """
@@ -73,13 +66,15 @@ class DashboardApp(App):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.ansi_color = True
+        self.location_data = get_location_details(LOCATION)
+        self.timezone = get_timezone(self.location_data[0],self.location_data[1])
         self.weather_data = None
 
     def compose(self) -> ComposeResult:
         with Vertical():
             with Horizontal(id="top_row"):
                 self.clock = Digits("", id="clock", classes="box")
-                self.clock.border_title = "Local Time"
+                self.clock.border_title = "Time"
                 self.clock.ALLOW_SELECT = False
 
                 self.weather = Static("Loading…", id="weather", classes="box")
@@ -96,7 +91,7 @@ class DashboardApp(App):
     def on_ready(self) -> None:
         self.update_all()
         self.set_interval(1, self.update_clock)
-        self.set_interval(1, self.update_weather)  # update weather every 10 min
+        self.set_interval(600, self.update_weather)
         self.set_interval(600, self.update_greeting)
 
     # ---- Updaters ----
@@ -107,61 +102,19 @@ class DashboardApp(App):
         self.update_greeting()
 
     def update_clock(self) -> None:
-        now = datetime.now(ZoneInfo(TIMEZONE))
+        now = datetime.now(self.timezone)
         time_str = now.strftime("%I:%M")
         self.clock.update(time_str)
 
-    def map_weather_code(self, code: int) -> str:
-        """Map Open-Meteo weather codes to emojis."""
-        mapping = {
-            0: "Clear",
-            1: "Mainly clear",
-            2: "Partly cloudy",
-            3: "Overcast",
-            45: "Fog",
-            48: "Depositing rime fog",
-            51: "Light drizzle",
-            53: "Moderate drizzle",
-            55: "Dense drizzle",
-            56: "Light freezing drizzle",
-            57: "Dense freezing drizzle",
-            61: "Slight rain",
-            63: "Moderate rain",
-            65: "Heavy rain",
-            66: "Light freezing rain",
-            67: "Heavy freezing rain",
-            71: "Slight snow fall",
-            73: "Moderate snow fall",
-            75: "Heavy snow fall",
-            77: "Snow grains",
-            80: "Slight rain showers",
-            81: "Moderate rain showers",
-            82: "Violent rain showers",
-            85: "Slight snow showers",
-            86: "Heavy snow showers",
-            95: "Thunderstorm",
-            96: "Thunderstorm with slight hail",
-            99: "Thunderstorm with heavy hail",
-        }
-        return mapping.get(code, "❓ Unknown")
-
-
     def update_weather(self):
-
-        url = f"https://api.open-meteo.com/v1/forecast?latitude={LAT}&longitude={LON}&current_weather=true"
-        resp = requests.get(url, timeout=5)
-        data = resp.json()
-        cw = data.get("current_weather", {})
-        temp = cw.get("temperature")  # in Celsius by default
-        # convert to Fahrenheit if you like
-        temp_f = int(temp * 9/5 + 32) if temp is not None else None
-        desc = cw.get("weathercode")  # you might need a mapping from weathercode → text/emoji
-        # then update self.weather accordingly
-        emoji = self.map_weather_code(desc)
-        self.weather.update(f"{temp_f}° F | {emoji}")
+            temp, weather, city = get_weather_details(self.location_data[2])
+            if temp is None or weather is None or city is None:
+                self.weather.update("No Weather Data")
+            else:
+                self.weather.update(f"{temp}° F | {weather} | {city}")
 
     def update_greeting(self) -> None:
-        hour = datetime.now(ZoneInfo(TIMEZONE)).hour
+        hour = datetime.now(self.timezone).hour
         if hour < 12:
             text = "Good Morning ☀️"
         elif hour < 18:

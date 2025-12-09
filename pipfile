@@ -4,11 +4,10 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-pyobjc = "*"
 pillow = "*"
-rich = "*"
 textual = "*"
 geopy = "*"
+timezonefinder = "*"
 
 [dev-packages]
 textual-dev = "*"
