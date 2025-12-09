@@ -94,7 +94,6 @@ def get_timezone(latitude: float, longitude: float) -> ZoneInfo:
     if timezone_str is None:
         return None
     else:
-        print(f"The timezone for ({latitude}, {longitude}) is: {timezone_str}")
         return ZoneInfo(timezone_str)
     
 def update_greeting(timezone) -> str:

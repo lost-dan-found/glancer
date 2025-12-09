@@ -59,6 +59,7 @@ class DashboardApp(App):
         width: 100%;
         height: 100%;
         padding: 0 3;
+        background: transparent;
     }
 
     """
@@ -94,7 +95,7 @@ class DashboardApp(App):
         self.update_all()
         self.set_interval(1, self.update_clock)
         self.set_interval(600, self.update_weather)
-        self.set_interval(600, self.update_quote)
+        self.set_interval(10, self.update_quote)
 
     # ---- Updaters ----
 
