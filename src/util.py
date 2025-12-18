@@ -1,4 +1,5 @@
 import requests
+from quote import quote
 from typing import Tuple
 from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
@@ -26,7 +27,7 @@ def get_weather_details(location: str = DEFAULT_LOCATION) -> Tuple[int,str,str]:
             return (None,None,None)
         else:
             url = f"https://api.open-meteo.com/v1/forecast?latitude={location_data[0]}&longitude={location_data[1]}&current_weather=true"
-            resp = requests.get(url, timeout=5)
+            resp = requests.get(url, timeout=1)
             data = resp.json()
             cw = data.get("current_weather", {})
             temperature = cw.get("temperature")  # in Celsius by default
@@ -105,4 +106,9 @@ def update_greeting(timezone) -> str:
     else:
         text = "Good Evening"
     return text
+
+def get_quote() -> str:
+    search = "CS Lewis"
+    return quote(search, limit=1)
+
 

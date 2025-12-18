@@ -1,4 +1,4 @@
-from util import get_timezone, get_weather_details, get_location_details, update_greeting
+from util import get_timezone, get_weather_details, get_location_details, update_greeting, get_quote
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -120,7 +120,7 @@ class DashboardApp(App):
         self.update_all()
         self.set_interval(1, self.update_clock)
         self.set_interval(600, self.update_weather)
-        self.set_interval(10, self.update_quote)
+        self.set_interval(600, self.update_quote)
 
     # ---- Updaters ----
 
@@ -142,7 +142,8 @@ class DashboardApp(App):
                 self.weather.update(f"{temp}° F | {weather} | {city}")
 
     def update_quote(self):
-        self.quote.update("There comes a day in every man's life that he can no longer write another line of SAAS code. -Dan")
+        quote_data = get_quote()[0]
+        self.quote.update(f"{quote_data.get('quote')} - {quote_data.get('author')}")
         self.quote.border_title = update_greeting(self.timezone)
         self.quote.border_subtitle = "Glancer - v1.0"
 
@@ -158,7 +159,7 @@ class DashboardApp(App):
         # refresh location/timezone/weather
         self.location_data = get_location_details(LOCATION)
         self.timezone = get_timezone(self.location_data[0], self.location_data[1])
-        # trigger UI updates
+        #this triggers UI updates
         self.update_all()
 
 if __name__ == "__main__":
